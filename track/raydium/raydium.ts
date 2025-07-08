@@ -827,6 +827,26 @@ export const runListener = async (io?: Server) => {
     logger.info('Bot is running! Press CTRL + C to stop it.')
     logger.info('----------------------------------------')
 }
+if (res) {
+    sellStatus(poolId.toString(), 2, '');
+
+    // Reinvestment logic
+    const preSellBalance = solAmount;
+    const postSellBalance = await solanaConnection.getBalance(quoteTokenAssociatedAddress) / 1e9;
+
+    const profit = postSellBalance - preSellBalance;
+
+    if (profit > 0) {
+        const reinvested = preSellBalance + (profit * 0.8);
+        const updatedData = { ...data, amount: parseFloat(reinvested.toFixed(4)) };
+        fs.writeFileSync("data.json", JSON.stringify(updatedData, null, 4));
+        logger.info(`📈 Reinvested 80% of profit. New solAmount: ${reinvested.toFixed(4)} SOL`);
+    } else {
+        logger.warn("⚠️ No profit detected. solAmount remains unchanged.");
+    }
+} else {
+    sellStatus(poolId.toString(), 3, '')
+}
 
 const watcher = () => {
     try {
